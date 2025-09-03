@@ -1,0 +1,94 @@
+{'enteral': {
+        # For MIMIC:
+        # Enteral Feeds/Nutrition - macros are g/ml - cumulative proportion of data in inputevents given
+        'Nepro (Full)': {'protein': 0.08, 'fat': 0.097, 'carbs': 0.16},  # 9%
+        'Replete with Fiber (Full)': {'protein': 0.0624, 'fat': 0.034, 'carbs': 0.112},  # 18
+        'Vital High Protein (Full)': {'protein': 0.0875, 'fat': 0.0232, 'carbs': 0.112},  # 26%
+        'Promote (Full)': {'protein': 0.0625, 'fat': 0.026, 'carbs': 0.130},  # 34%
+        'Osmolite 1.5 (Full)': {'protein': 0.0627, 'fat': 0.0491, 'carbs': 0.2036},  # 40%
+        'Jevity 1.5 (Full)': {'protein': 0.0637, 'fat': 0.0498, 'carbs': 0.2156},  # 46%
+        'Promote with Fiber (Full)': {'protein': 0.0625, 'fat': 0.0282, 'carbs': 0.1383},  # 52%
+        'Glucerna 1.2 (Full)': {'protein': 0.060, 'fat': 0.060, 'carbs': 0.1145},  # 58%
+        'Glucerna 1.5 (Full)': {'protein': 0.0827, 'fat': 0.0751, 'carbs': 0.1329},  # 64%
+        'Jevity 1.2 (Full)': {'protein': 0.0557, 'fat': 0.0392, 'carbs': 0.1696},  # 69% (-> 73%)
+        'Fibersource HN (Full)': {'protein': 0.054, 'fat': 0.040, 'carbs': 0.164},  # 75%
+        'Isosource 1.5 (Full)': {'protein': 0.068, 'fat': 0.059, 'carbs': 0.176},  # 78%
+        'Nutren Pulmonary (Full)': {'protein': 0.068, 'fat': 0.0948, 'carbs': 0.100},  # 80%
+        'Two Cal HN (Full)': {'protein': 0.0835, 'fat': 0.0905, 'carbs': 0.2185},  # 82% (-> 85%)
+        'Vital 1.5 (Full)': {'protein': 0.0675, 'fat': 0.0571, 'carbs': 0.187},  # 87%
+        'NovaSource Renal (Full)': {'protein': 0.093, 'fat': 0.1015, 'carbs': 0.181},  # 88%
+        'Nutren 2.0 (Full)': {'protein': 0.084, 'fat': 0.092, 'carbs': 0.216},  # 90%
+        'Replete (Full)': {'protein': 0.0624, 'fat': 0.034, 'carbs': 0.112},  # 91%
+        'Boost Glucose Control (Full)': {'protein': 0.0675, 'fat': 0.0295, 'carbs': 0.0675},  # 93%
+        'Peptamen Bariatric (Full)': {'protein': 0.0932, 'fat': 0.038, 'carbs': 0.078},  # 94%
+        'Pulmocare (Full)': {'protein': 0.0626, 'fat': 0.0933, 'carbs': 0.1057},  # 95%
+        'Vivonex (Full)': {'protein': 0.0383, 'fat': 0.00267, 'carbs': 0.2057},  # 96%
+        'Peptamen 1.5 (Full)': {'protein': 0.068, 'fat': 0.056, 'carbs': 0.188},  # 97%
+        'Nutren Renal (Full)': {'protein': 0.0907, 'fat': 0.100, 'carbs': 0.183},  # 98%
+        'Glucerna (Full)': {'protein': 0.0418, 'fat': 0.0544, 'carbs': 0.0956},  # 98%
+        'Impact with Fiber (Full)': {'protein': 0.056, 'fat': 0.028, 'carbs': 0.134},  # 98%
+        'Ensure (Full)': {'protein': 0.0380, 'fat': 0.0253, 'carbs': 0.1772},
+        # 'ProBalance (Full)' <- no information available
+        'Replete with Fiber (1/2)': {'protein': 0.0312, 'fat': 0.017, 'carbs': 0.056},
+        'Impact (Full)': {'protein': 0.056, 'fat': 0.028, 'carbs': 0.134},
+        'Replete with Fiber (3/4)': {'protein': 0.0468, 'fat': 0.0255, 'carbs': 0.084},
+        'Replete (3/4)': {'protein': 0.0468, 'fat': 0.0255, 'carbs': 0.084},
+        'Enlive (Full)': {'protein': 0.0844, 'fat': 0.0464, 'carbs': 0.1857},
+        'Replete (1/2)': {'protein': 0.0312, 'fat': 0.017, 'carbs': 0.056},
+        'NovaSource Renal (1/2)': {'protein': 0.0465, 'fat': 0.05075, 'carbs': 0.0905},
+        'Nutren Renal (1/2)': {'protein': 0.04535, 'fat': 0.050, 'carbs': 0.0915},
+        'Nutren 2.0 (3/4)': {'protein': 0.063, 'fat': 0.069, 'carbs': 0.162},
+        'Isosource 1.5 (1/2)': {'protein': 0.034, 'fat': 0.0295, 'carbs': 0.088},
+        'Nutren Renal (3/4)': {'protein': 0.068025, 'fat': 0.075, 'carbs': 0.13725},
+        'Peptamen 1.5 (3/4)': {'protein': 0.051, 'fat': 0.042, 'carbs': 0.141},
+        'Replete with Fiber (1/4)': {'protein': 0.0156, 'fat': 0.0085, 'carbs': 0.028},
+        'NovaSource Renal (3/4)': {'protein': 0.06975, 'fat': 0.076125, 'carbs': 0.13575},
+        'Fibersource HN (3/4)': {'protein': 0.0405, 'fat': 0.03, 'carbs': 0.123},
+        'Nutren 2.0 (1/2)': {'protein': 0.042, 'fat': 0.046, 'carbs': 0.108},
+        'Impact (3/4)': {'protein': 0.042, 'fat': 0.021, 'carbs': 0.1005},
+        'Nutren Pulmonary (1/2)': {'protein': 0.034, 'fat': 0.0474, 'carbs': 0.050},
+        'Fibersource HN (1/2)': {'protein': 0.027, 'fat': 0.020, 'carbs': 0.082},
+        'Replete (2/3)': {'protein': 0.0416, 'fat': 0.0227, 'carbs': 0.0747},
+        'Peptamen 1.5 (1/2)': {'protein': 0.034, 'fat': 0.028, 'carbs': 0.094},
+        'Impact (1/2)': {'protein': 0.028, 'fat': 0.014, 'carbs': 0.067},
+        'Nutren 2.0 (1/4)': {'protein': 0.021, 'fat': 0.023, 'carbs': 0.054},
+        'Impact with Fiber (3/4)': {'protein': 0.042, 'fat': 0.021, 'carbs': 0.1005},
+        'Replete with Fiber (2/3)': {'protein': 0.0416, 'fat': 0.0227, 'carbs': 0.0747},
+        'Fibersource HN (1/4)': {'protein': 0.0135, 'fat': 0.010, 'carbs': 0.041},
+        'Vivonex (1/2)': {'protein': 0.01915, 'fat': 0.001335, 'carbs': 0.10285},
+        'Isosource 1.5 (3/4)': {'protein': 0.051, 'fat': 0.04425, 'carbs': 0.132},
+        'Glucerna (1/2)': {'protein': 0.0209, 'fat': 0.0272, 'carbs': 0.0478},
+        'Peptamen 1.5 (1/4)': {'protein': 0.017, 'fat': 0.014, 'carbs': 0.047},
+        'Boost Glucose Control (1/2)': {'protein': 0.03375, 'fat': 0.01475, 'carbs': 0.03375},
+        'Nutren 2.0 (2/3)': {'protein': 0.056, 'fat': 0.0613, 'carbs': 0.144},
+        'Replete (1/4)': {'protein': 0.0156, 'fat': 0.0085, 'carbs': 0.028},
+        'Two Cal HN (1/2)': {'protein': 0.04175, 'fat': 0.04525, 'carbs': 0.10925},
+        'Nutren Pulmonary (3/4)': {'protein': 0.051, 'fat': 0.0711, 'carbs': 0.075},
+        'Nepro (1/2)': {'protein': 0.04, 'fat': 0.0485, 'carbs': 0.08},
+        'Boost Glucose Control (3/4)': {'protein': 0.050625, 'fat': 0.022125, 'carbs': 0.050625},
+        'Impact (1/4)': {'protein': 0.014, 'fat': 0.007, 'carbs': 0.0335},
+        'Vivonex (3/4)': {'protein': 0.028725, 'fat': 0.0020025, 'carbs': 0.154275},
+        'Impact with Fiber (1/2)': {'protein': 0.028, 'fat': 0.014, 'carbs': 0.067},
+        'Isosource 1.5 (1/4)': {'protein': 0.017, 'fat': 0.01475, 'carbs': 0.044},
+        'Impact with Fiber (1/4)': {'protein': 0.014, 'fat': 0.007, 'carbs': 0.0335},
+        'Nutren Renal (1/4)': {'protein': 0.022675, 'fat': 0.025, 'carbs': 0.04575},
+        'Isosource 1.5 (2/3)': {'protein': 0.0453, 'fat': 0.0393, 'carbs': 0.1173},
+        'Pulmocare (1/2)': {'protein': 0.0313, 'fat': 0.04665, 'carbs': 0.05285},
+        'Pulmocare (1/4)': {'protein': 0.01565, 'fat': 0.023325, 'carbs': 0.026425},
+        'Boost Glucose Control (1/4)': {'protein': 0.016875, 'fat': 0.007375, 'carbs': 0.016875},
+        'Ensure (3/4)': {'protein': 0.0285, 'fat': 0.018975, 'carbs': 0.1329},
+        'Beneprotein': {'protein': 0.8571},  # <- 6g protein in 7g powder, unit is 'grams'
+        # 'Beneprotein.': {'protein': 0.8571}  <-  This is in mls rather than grams, not clear how to convert
+    },
+        'parenteral': {
+            # Parenteral feeds for MIMIC
+            # 'TPN w/ Lipids' <- seems to have volume / rate but nutritional info documented separately
+            # 'TPN without Lipids' <- seems to have volume / rate but nutritional info documented separately
+            # 'Peripheral Parenteral Nutrition' <- seems to have volume / rate but nutritional info documented separately
+            'Lipids 10%': {'fat': 0.1},  # i.e., intralipid but 10%. Unit is in mls.
+            'Lipids 20%': {'fat': 0.2},  # i.e., intralipid, given IV. Unit is in mls.
+            'Amino Acids': {'protein': 1},  # Unit is in grams
+            'Lipids (additive)': {'fat': 1},  # Unit is in grams
+            'Dextrose PN': {'carbs': 1},  # Unit is in grams
+        }
+    }

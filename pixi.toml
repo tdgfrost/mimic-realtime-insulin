@@ -1,0 +1,16 @@
+[workspace]
+authors = ["tdgfrost <100413067+tdgfrost@users.noreply.github.com>"]
+channels = ["conda-forge"]
+name = "mimic-realtime-insulin"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = ">=3.10"
+
+[pypi-dependencies]
+h5py = ">=3.14.0, <4"
+polars = ">=1.33.0, <2"
+pyyaml = ">=6.0.2, <7"
