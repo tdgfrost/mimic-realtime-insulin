@@ -98,13 +98,12 @@ def build_mimic_data(input_window_size=168, context_length=400, next_state_delay
 
     label_features = ['episode_num', 'step_num', 'label_id_num', 'label_id_num_next', 'steps_per_episode', 'steps_remaining',
                       'minutes_remaining', 'is_first_state', 'is_last_state', 'current_bm', 'prev_bm',
-                      'time_since_prev_bm', 'bm_next', 'time_until_bm_next', 'n_future_hypers',
-                      'insulin_default_rate', 'insulin_new_rate', 'insulin_maintain', 'insulin_change', 'insulin_stop',
-                      'insulin_out_of_bounds', 'insulin_delta_change', 'insulin_maintain_prev', 'insulin_change_prev',
-                      'insulin_stop_prev', 'insulin_out_of_bounds_prev', 'insulin_delta_change_prev',
-                      'insulin_maintain_next', 'insulin_change_next', 'insulin_stop_next', 'insulin_out_of_bounds_next',
-                      'insulin_delta_change_next', '1-day-alive', '1-day-alive-final', '3-day-alive',
-                      '3-day-alive-final', '7-day-alive', '7-day-alive-final', '14-day-alive', '14-day-alive-final', '28-day-alive', '28-day-alive-final']
+                      'time_since_prev_bm', 'bm_next', 'time_until_bm_next', 'n_future_hypers', 'insulin_default_rate',
+                      'insulin_new_rate', 'insulin_maintain', 'insulin_change', 'insulin_stop', 'insulin_delta_change',
+                      'insulin_maintain_prev', 'insulin_change_prev', 'insulin_stop_prev', 'insulin_delta_change_prev',
+                      'insulin_maintain_next', 'insulin_change_next', 'insulin_stop_next', 'insulin_delta_change_next',
+                      '1-day-alive', '1-day-alive-final', '3-day-alive', '3-day-alive-final', '7-day-alive',
+                      '7-day-alive-final', '14-day-alive', '14-day-alive-final', '28-day-alive', '28-day-alive-final']
 
     with open('./data/label_features.txt', 'w') as f:
         for label_feature in label_features:
@@ -118,7 +117,6 @@ def build_mimic_data(input_window_size=168, context_length=400, next_state_delay
     create_final_dataframe(encoded_input_data=encoded_input_data,
                            labels=labels,
                            encodings=encodings,
-                           feature_encoding=feature_encoding,
                            train_patient_ids=train_patient_ids,
                            val_patient_ids=val_patient_ids,
                            test_patient_ids=test_patient_ids,

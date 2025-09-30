@@ -264,9 +264,8 @@ def convert_dataframe_to_hdf5(context_length: int = 400):
         create_hdf5_array(h5_array_path, dataframe_dir, features, label_features, context_length)
 
 
-def create_final_dataframe(encoded_input_data, labels, encodings, feature_encoding,
-                           train_patient_ids, val_patient_ids, test_patient_ids, sorting_columns, grouping_columns,
-                           context_length):
+def create_final_dataframe(encoded_input_data, labels, encodings, train_patient_ids, val_patient_ids, test_patient_ids,
+                           sorting_columns, grouping_columns, context_length):
     """
     This is the final pipeline for taking the encoded data and labels, and creating dedicated input data
     for the model.
@@ -818,10 +817,10 @@ def create_glucose_labels_for_mimic(combined_data, admissions, patients, input_w
                      'is_last_state', 'starttime', 'starttime_next', 'patientweight', 'current_bm', 'prev_bm',
                      'time_since_prev_bm', 'bm_next', 'time_until_bm_next', 'insulin_changetime',
                      'insulin_default_rate', 'insulin_new_rate', 'insulin_maintain', 'insulin_change', 'insulin_stop',
-                     'insulin_out_of_bounds', 'insulin_delta_change', 'insulin_maintain_next', 'insulin_change_next',
-                     'insulin_stop_next', 'insulin_out_of_bounds_next', 'insulin_delta_change_next', '1-day-alive',
-                     '1-day-alive-final', '3-day-alive', '3-day-alive-final', '7-day-alive', '7-day-alive-final',
-                     '14-day-alive', '14-day-alive-final', '28-day-alive', '28-day-alive-final', 'input_id_num']
+                     'insulin_delta_change', 'insulin_maintain_next', 'insulin_change_next', 'insulin_stop_next',
+                     'insulin_delta_change_next', '1-day-alive', '1-day-alive-final', '3-day-alive',
+                     '3-day-alive-final', '7-day-alive', '7-day-alive-final', '14-day-alive', '14-day-alive-final',
+                     '28-day-alive', '28-day-alive-final', 'input_id_num']
 
     # Create our start/end inclusion times for input data (and save the DataFrame for the next step)
     (
@@ -844,7 +843,6 @@ def create_glucose_labels_for_mimic(combined_data, admissions, patients, input_w
             pl.col('insulin_maintain').shift(1).over(['episode_num']).alias('insulin_maintain_prev'),
             pl.col('insulin_change').shift(1).over(['episode_num']).alias('insulin_change_prev'),
             pl.col('insulin_stop').shift(1).over(['episode_num']).alias('insulin_stop_prev'),
-            pl.col('insulin_out_of_bounds').shift(1).over(['episode_num']).alias('insulin_out_of_bounds_prev'),
             pl.col('insulin_delta_change').shift(1).over(['episode_num']).alias('insulin_delta_change_prev'),
         ])
     )
@@ -910,9 +908,8 @@ def create_glucose_labels_for_mimic(combined_data, admissions, patients, input_w
                        'minutes_remaining', 'is_first_state', 'is_last_state', 'current_bm', 'prev_bm',
                        'time_since_prev_bm', 'bm_next', 'time_until_bm_next', 'n_future_hypers', 'insulin_changetime',
                        'insulin_default_rate', 'insulin_new_rate', 'insulin_maintain', 'insulin_change', 'insulin_stop',
-                       'insulin_out_of_bounds', 'insulin_delta_change', 'insulin_maintain_prev', 'insulin_change_prev',
-                       'insulin_stop_prev', 'insulin_out_of_bounds_prev', 'insulin_delta_change_prev',
-                       'insulin_maintain_next', 'insulin_change_next', 'insulin_stop_next', 'insulin_out_of_bounds_next',
+                       'insulin_delta_change', 'insulin_maintain_prev', 'insulin_change_prev', 'insulin_stop_prev',
+                       'insulin_delta_change_prev', 'insulin_maintain_next', 'insulin_change_next', 'insulin_stop_next',
                        'insulin_delta_change_next', '1-day-alive', '1-day-alive-final', '3-day-alive',
                        '3-day-alive-final', '7-day-alive', '7-day-alive-final', '14-day-alive', '14-day-alive-final',
                        '28-day-alive', '28-day-alive-final', 'age', 'gender', 'patientweight', 'input_id_num']
@@ -1139,13 +1136,6 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
     valid_insulin_before_bm_check = pl.col('insulin_changetime').is_between('valid_insulin_pre', 'starttime',
                                                                             closed="both")
 
-    valid_insulin_doses = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]
-    rounded_insulin_delta = ((pl.col('insulin_new_rate') - pl.col('insulin_default_rate')) * 2).round() / 2
-    in_range_insulin_delta_change = rounded_insulin_delta.abs().is_in(valid_insulin_doses)
-    too_high_insulin_delta_change = rounded_insulin_delta.abs() > 5.0
-    insulin_stopped = (rounded_insulin_delta <= -0.5) & (pl.col('insulin_new_rate') < 0.25)
-    insulin_maintained = rounded_insulin_delta.abs() == 0
-
     # Reduce labels to just the BM checks
     labels = (
         labels
@@ -1168,7 +1158,7 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
         ])
     )
 
-    # Refine to the correct insulin label for each BM check
+    # Join with the insulin rate changes
     labels = (
         labels
         .join_asof(
@@ -1176,7 +1166,7 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
             # - should be between next_state_start and (next_state_start + next_state_window)
             labels.select(
                 ['subject_id',
-                 pl.col('starttime') - pl.duration(minutes=next_state_start+5)
+                 pl.col('starttime') - pl.duration(minutes=next_state_start + 5)
                  ]).rename({'starttime': 'starttime_next'}),
             left_on='starttime',
             right_on='starttime_next',
@@ -1186,12 +1176,17 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
             tolerance=f'{next_state_window + next_state_start + 5}m'
         )
         # Move 'next_starttime' back to its correct timestamp
-        .with_columns([pl.col('starttime_next') + pl.duration(minutes=next_state_start+5)])
+        .with_columns([pl.col('starttime_next') + pl.duration(minutes=next_state_start + 5)])
         # Join with our insulin rate changes
         .join(insulin_rate_changes.lazy().drop('feature'), on='subject_id', how='inner')
         # Make sure we only have BM labels in our overall valid inclusion window (see previous section)
         .filter(pl.col('starttime').is_between('start_inclusion', 'end_inclusion', closed="both"))
         .unique()
+    )
+
+    # Identify eligible insulin labels
+    labels = (
+        labels
         # Identify the "valid insulin" range - you essentially have 15 minutes either side of the BM check
         # (remember that group_by_dynamic with 'right' label means that "-10 minutes" is inclusive of the last -15 mins
         .with_columns([
@@ -1206,7 +1201,8 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
         ])
         # Identify potential valid insulin changes
         .with_columns([
-            pl.when(valid_insulin_after_bm_check | (valid_insulin_before_bm_check & valid_insulin_after_bm_check.not_()))
+            pl.when(
+                valid_insulin_after_bm_check | (valid_insulin_before_bm_check & valid_insulin_after_bm_check.not_()))
             .then(pl.lit(True).alias('valid_insulin_row'))
             .otherwise(pl.lit(False))
         ])
@@ -1258,13 +1254,42 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
             .over('subject_id', 'starttime')
             for col in ['insulin_default_rate', 'insulin_new_rate']
         ])
+    )
+
+    # Prepare our column selection expressions
+    valid_insulin_doses = [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0]
+    insulin_delta_rate = pl.col('insulin_new_rate') - pl.col('insulin_default_rate')
+    rounded_insulin_delta = (
+        pl.when(insulin_delta_rate.abs() < np.max(valid_insulin_doses) + 0.5)
+        .then(
+            # Find the closest value from the list
+            pl.lit(valid_insulin_doses).list.get(
+                (valid_insulin_doses - insulin_delta_rate.abs()).list.eval(pl.element().abs()).list.arg_min()
+            ) * insulin_delta_rate.sign())
+        .otherwise(
+            # If delta change is outside the list, leave unchanged
+            insulin_delta_rate
+        )
+    )
+
+    valid_insulin_doses.remove(0.0)
+    insulin_maintained = rounded_insulin_delta.abs() == 0
+    insulin_stopped = (rounded_insulin_delta <= -0.5) & (pl.col('insulin_new_rate') < 0.25)
+    in_range_insulin_delta_change = rounded_insulin_delta.abs().is_in(valid_insulin_doses)
+    out_of_bounds_insulin_delta_change = (
+            insulin_maintained.not_() & insulin_stopped.not_() & in_range_insulin_delta_change.not_()
+    )
+
+    # Select our valid insulin labels
+    labels = (
+        labels
         .filter(
             # Either filter to the only valid insulin change
             pl.col('this_row')
             |
             # Or, if there are no valid insulin changes, just choose the first row as a placeholder
             (pl.col('this_row').not_().all()
-            & pl.col('this_row').is_first_distinct()).over('subject_id', 'starttime')
+             & pl.col('this_row').is_first_distinct()).over('subject_id', 'starttime')
         )
         .with_columns([
             # For rows with no valid insulin changes, set the insulin changetime and input_id_num to null
@@ -1293,16 +1318,16 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
             .then(pl.lit(1))
             .otherwise(pl.lit(0)).alias('insulin_stop'),
 
-            # Add insulin out-of-bounds
-            pl.when(too_high_insulin_delta_change & insulin_stopped.not_())
-            .then(pl.lit(1))
-            .otherwise(pl.lit(0)).alias('insulin_out_of_bounds'),
-
-            # Add insulin delta change (rounded to 0.5)
-            (((pl.col('insulin_new_rate') - pl.col('insulin_default_rate')) * 2).round() / 2)
-            .alias('insulin_delta_change')
+            # Add insulin delta change (rounded to nearest item in our valid_insulin_doses list)
+            rounded_insulin_delta.alias('insulin_delta_change')
         ])
-        # Address multiple BMs that share an insulin changetime
+        # Remove completely the out-of-bounds labels
+        .filter(out_of_bounds_insulin_delta_change.not_())
+    )
+
+    # Address multiple BMs that share the same insulin action label
+    labels = (
+        labels
         # 1a) If there is an insulin change after BMs e.g., BM -> BM -> insulin -> (BM) ..., select the last BM BEFORE the insulin
         # 1b) If there is an insulin change before BMs only e.g., insulin -> BM -> ..., select the first BM AFTER the insulin
         # 2) If there is no insulin change, select the last BM overall?
@@ -1314,8 +1339,9 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
             .then(
                 # If there are BMs before the insulin change, prioritise the last one
                 pl.when((pl.col('starttime') <= pl.col('insulin_changetime')).any().over('insulin_changetime'))
-                .then((pl.col('starttime') <= pl.col('insulin_changetime')).cum_prod().is_last_distinct().over('insulin_changetime')
-                        # (ignore BMs after the insulin change in this case)
+                .then((pl.col('starttime') <= pl.col('insulin_changetime')).cum_prod().is_last_distinct().over(
+                    'insulin_changetime')
+                      # (ignore BMs after the insulin change in this case)
                       & (pl.col('starttime') <= pl.col('insulin_changetime')).cum_prod().over('insulin_changetime'))
                 .otherwise(
                     # If the only BMs are after the insulin change, prioritise the first one
@@ -1328,6 +1354,7 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
         .filter(pl.col('rows_to_keep'))
         .drop('this_row', 'last_row', 'rows_to_keep')
         # A small number of labels now have the wrong starttime_next after filtering, so these should be updated
+        .sort('subject_id', 'starttime')
         .with_columns([
             pl.when(
                 # If the next starttime is not null
@@ -1336,20 +1363,17 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
                 & (pl.col('starttime_next') != pl.col('starttime').shift(-1))
             )
             .then(pl.col('starttime').shift(-1))
-            .otherwise('starttime_next').over('subject_id', 'start_inclusion', 'end_inclusion').alias('starttime_next')
+            .otherwise('starttime_next')
+            .over('subject_id', 'start_inclusion', 'end_inclusion').alias('starttime_next')
         ])
-        .collect()
-    )
-
-    # If the starttime_next is actually outside the end_inclusion range, change it to null
-    # (because there won't be any starttime labels available to match with it!)
-    labels = (
-        labels
+        # If the starttime_next is actually outside the end_inclusion range, change it to null
+        # (because there won't be any starttime labels available to match with it!)
         .with_columns([
             pl.when(pl.col('starttime_next') > pl.col('end_inclusion'))
             .then(pl.lit(None))
             .otherwise('starttime_next').alias('starttime_next')
         ])
+        .collect()
     )
 
     # Convert the start_/end_inclusions to a unique episode number
@@ -1380,7 +1404,7 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
         labels
         .join(
             labels.select(['subject_id', 'starttime', 'label_id_num', 'insulin_maintain', 'insulin_change',
-                           'insulin_stop', 'insulin_out_of_bounds', 'insulin_delta_change']),
+                           'insulin_stop', 'insulin_delta_change']),
             left_on=['subject_id', 'starttime_next'],
             right_on=['subject_id', 'starttime'],
             how='left',
