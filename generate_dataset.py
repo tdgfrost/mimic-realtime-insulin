@@ -1,18 +1,19 @@
 from utils.preprocessing.tools import *
+import json
 
 # Define the argument parser and possible arguments globally
 parser = argparse.ArgumentParser()
-parser.add_argument('--input_window', type=int, default=168,
-                    help="Specify the input window size for the model (in hours) - default is 168 hours i.e., 7 days")
-parser.add_argument('--context', type=int, default=400,
-                    help="Specify the context window size for the model - default is 400")
+parser.add_argument('--train_test_split', type=float, default=0.8)
+parser.add_argument('--eligible_input_window', type=int, default=168,
+                    help="Specify the window of eligibility for input data (in hours prior to the label) "
+                         "- default is 168 hours i.e., 7 days")
 parser.add_argument('--delay', default=0,
                     help="Specify the delay (in minutes) between states during training - "
                          "default is 0 minutes.")
 
 
-def build_mimic_data(input_window_size=168, context_length=400, next_state_delay=15, next_state_window=24*60,
-                     inclusion_hours=24):
+def build_mimic_data(input_window_size=168, next_state_delay=15, next_state_window=24*60, inclusion_hours=24,
+                     train_test_split=0.8):
     # Get our dict of target variables
     target_variables = get_variable_names_for_mimic()  # <- returns a dict
     nutrition_variables = get_nutrition_variables_for_mimic()  # <- returns a list, needs to be mapped key:key
@@ -22,7 +23,8 @@ def build_mimic_data(input_window_size=168, context_length=400, next_state_delay
     # Get the required DataFrames
     announce_progress('Loading the data...')
     (admissions, combined_data, patients,
-     (train_patient_ids, val_patient_ids, test_patient_ids)) = load_mimic(variable_names=target_variables)
+     (train_patient_ids, val_patient_ids, test_patient_ids)) = load_mimic(variable_names=target_variables,
+                                                                          train_test_split=train_test_split)
 
     # Do the cleaning steps
     announce_progress('Cleaning the data...')
@@ -54,6 +56,10 @@ def build_mimic_data(input_window_size=168, context_length=400, next_state_delay
     (encoded_input_data, features,
      feature_encoding, encodings) = encode_combined_data_for_mimic(combined_data=combined_data)
 
+    # Get the delta value/time for the encoded input data
+    encoded_input_data = get_delta_value_time(encoded_input_data=encoded_input_data,
+                                              encodings=encodings)
+
     # Get the scaling data
     scaling_data = get_scaling_data_for_mimic(encoded_input_data=encoded_input_data,
                                               labels=labels,
@@ -84,11 +90,14 @@ def build_mimic_data(input_window_size=168, context_length=400, next_state_delay
         )
 
     # Save all our data thus far
-    combined_data.write_parquet('./data/mimic/parquet/combined_data.parquet')
-    encoded_input_data.write_parquet('./data/mimic/parquet/encoded_input_data.parquet')
+    combined_data.write_parquet('./data/mimic/combined_data.parquet')
+    encoded_input_data.write_parquet('./data/mimic/encoded_input_data.parquet')
     feature_encoding.write_parquet('./data/feature_encoding.parquet')
+    labels.write_parquet('./data/mimic/labels.parquet')
     scaling_data.write_parquet('./data/scaling_data.parquet')
-    labels.write_parquet('./data/mimic/parquet/labels.parquet')
+    with open('./data/encodings.json', 'w') as f:
+        json.dump(encodings, f)
+        f.close()
 
     with open('./data/features.txt', 'w') as f:
         for feature in features:
@@ -110,24 +119,6 @@ def build_mimic_data(input_window_size=168, context_length=400, next_state_delay
             f.write(label_feature + '\n') if label_feature != label_features[-1] else f.write(label_feature)
         f.close()
 
-    # Create the finalised input data and label data
-    announce_progress('Constructing and saving final dataframes...')
-    encoded_input_data = pl.scan_parquet('./data/mimic/parquet/encoded_input_data.parquet').drop('str_feature')
-    labels = pl.scan_parquet('./data/mimic/parquet/labels.parquet')
-    create_final_dataframe(encoded_input_data=encoded_input_data,
-                           labels=labels,
-                           encodings=encodings,
-                           train_patient_ids=train_patient_ids,
-                           val_patient_ids=val_patient_ids,
-                           test_patient_ids=test_patient_ids,
-                           sorting_columns=['subject_id', 'episode_num', 'step_num'],
-                           grouping_columns=['subject_id', 'episode_num', 'step_num', 'targets'],
-                           context_length=context_length)
-
-    # Convert these to .hdf5 binaries
-    announce_progress('Converting the dataframes to .hdf5 compressed binaries...')
-    convert_dataframe_to_hdf5(context_length=context_length)
-
 
 if __name__ == "__main__":
     # Parse the command-line arguments inside the block
@@ -135,8 +126,8 @@ if __name__ == "__main__":
     args.delay = parse_delay(args.delay)
 
     # Execute the conversion function
-    build_mimic_data(input_window_size=args.input_window,
-                     context_length=args.context,
+    build_mimic_data(input_window_size=args.eligible_input_window,
                      next_state_delay=args.delay,
                      next_state_window=24*60,
-                     inclusion_hours=24)
+                     inclusion_hours=24,
+                     train_test_split=args.train_test_split)

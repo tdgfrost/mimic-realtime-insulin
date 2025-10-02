@@ -325,9 +325,10 @@ def create_final_dataframe(encoded_input_data, labels, encodings, train_patient_
                     # (i.e., how many minutes ago, relative to right now)
                     (pl.col('end_inclusion') - pl.col('featuretime')).dt.total_minutes().cast(pl.Int16).alias(
                         'featuretime'),
-                    'value', 'encoded_feature',
+                    'value', 'encoded_feature', 'delta_value', 'delta_time',
                     # For all our labels, just group these together into a Polars Struct for simplicity
-                    pl.struct(pl.exclude(*sorting_columns, 'featuretime', 'value', 'encoded_feature')).alias('targets')
+                    pl.struct(pl.exclude(*sorting_columns, 'featuretime', 'value', 'encoded_feature',
+                                         'delta_value', 'delta_time')).alias('targets')
                 ])
                 .collect()
                 .lazy()
@@ -356,39 +357,18 @@ def create_final_dataframe(encoded_input_data, labels, encodings, train_patient_
             )
 
             # Next, we will identify all historic drug rates and all other measurements.
-            # To calculate delta_value/delta_time, we want to compare to rows >= 15 minutes ago.
-            # To do this (as we did with scaling data), we will use join_asof to find the nearest approximate row.
             historic_events = (
                 temp
                 # Sorted from new to old (because increasing featuretime = older measurement)
                 .sort(by=sorting_columns + ['featuretime', 'encoded_feature'])
-            )
-
-            historic_events = (
-                historic_events
                 .with_columns([
                     # Get the 'rank' of each measurement
                     # i.e., the number of times the feature has appeared
                     # (we want to prioritise "unseen" features before repeat features)
                     pl.col('encoded_feature').cum_count().over(sorting_columns + ['encoded_feature']).alias(
-                        'feature_rank'),
-
-                    # Calculate the delta_value and delta_time for each feature
-                    # (excluding bolus/event values, hence the is_in check)
-                    pl.when(pl.col('encoded_feature').is_in(encodings['lab_names'] + encodings['drug_names']))
-                    .then(pl.col('value') - pl.col('value').shift(-1).over(sorting_columns + ['encoded_feature']))
-                    .otherwise(pl.lit(None)).alias('delta_value'),
-
-                    # Because larger featuretime = older row, we swap around the subtraction compared to delta_value
-                    pl.when(pl.col('encoded_feature').is_in(encodings['lab_names'] + encodings['drug_names']))
-                    .then(pl.col('featuretime').shift(-1).over(sorting_columns + ['encoded_feature']) - pl.col('featuretime'))
-                    .otherwise(pl.lit(None)).alias('delta_time')
+                        'feature_rank')
                 ])
-            )
-
-            # Sort all historic measurements by 1) the feature rank, and then 2) the feature time
-            historic_events = (
-                historic_events
+                # Sort all historic measurements by 1) the feature rank, and then 2) the feature time
                 .sort(sorting_columns + ['feature_rank', 'featuretime'])
                 .group_by(grouping_columns)
                 .agg(pl.all())
@@ -398,11 +378,6 @@ def create_final_dataframe(encoded_input_data, labels, encodings, train_patient_
             target_data = (
                 historic_events
                 .join(current_drug_infusions, on=grouping_columns, how='full', coalesce=True)
-            )
-
-            #
-            target_data = (
-                target_data
                 .with_columns([
                     # Use if-then to avoid concatenating nulls unnecessarily
                     # - if one col is empty, use the other col on its own
@@ -830,10 +805,10 @@ def create_glucose_labels_for_mimic(combined_data, admissions, patients, input_w
                  pl.col('starttime').alias('end_inclusion')])
         .unique()
         .collect()
-        .write_parquet('./data/mimic/parquet/labels.parquet')
+        .write_parquet('./data/mimic/labels.parquet')
     )
 
-    labels = pl.scan_parquet('./data/mimic/parquet/labels.parquet')
+    labels = pl.scan_parquet('./data/mimic/labels.parquet')
 
     # Add in our previous actions (if they exist)
     labels = (
@@ -963,11 +938,9 @@ def encode_combined_data_for_mimic(combined_data):
     )
 
     # Keep track of the encodings for all our features (by category), for use later on
-    age_encoding = np.int16(feature_encoding.filter(pl.col('str_feature') == 'age').select('encoded_feature').item())
-    gender_encoding = np.int16(
-        feature_encoding.filter(pl.col('str_feature') == 'gender').select('encoded_feature').item())
-    weight_encoding = np.int16(
-        feature_encoding.filter(pl.col('str_feature') == 'patientweight').select('encoded_feature').item())
+    age_encoding = feature_encoding.filter(pl.col('str_feature') == 'age').select('encoded_feature').item()
+    gender_encoding = feature_encoding.filter(pl.col('str_feature') == 'gender').select('encoded_feature').item()
+    weight_encoding = feature_encoding.filter(pl.col('str_feature') == 'patientweight').select('encoded_feature').item()
 
     str_features, all_encoded_features = (encoded_input_data.select('str_feature', 'encoded_feature')
                                           .unique().sort('str_feature'))
@@ -981,7 +954,8 @@ def encode_combined_data_for_mimic(combined_data):
             lab_names_encoded.extend([encoded_feature])
 
     encodings = {'age': age_encoding, 'gender': gender_encoding, 'weight': weight_encoding,
-                 'drug_names': drug_names_encoded, 'lab_names': lab_names_encoded, 'all_features': all_encoded_features}
+                 'drug_names': drug_names_encoded, 'lab_names': lab_names_encoded,
+                 'all_features': all_encoded_features.to_list()}
 
     return encoded_input_data, features, feature_encoding, encodings
 
@@ -1077,6 +1051,29 @@ def get_death_labels_for_mimic(df, admissions, patients):
     )
 
     return df
+
+
+def get_delta_value_time(encoded_input_data, encodings: dict = None):
+    """
+    Calculate the delta_value and delta_time columns for our input data.
+    """
+    is_drug_rate_or_lab = pl.col('encoded_feature').is_in(encodings['lab_names'] + encodings['drug_names'])
+    delta_shift = lambda key: (pl.col(key) - pl.col(key).shift(1).over('subject_id', 'encoded_feature'))
+    encoded_input_data = (
+        encoded_input_data
+        .sort('subject_id', 'featuretime')
+        .with_columns([
+            pl.when(is_drug_rate_or_lab)
+            .then(delta_shift('value').alias('delta_value'))
+            .otherwise(pl.lit(None)),
+
+            pl.when(is_drug_rate_or_lab)
+            .then(delta_shift('featuretime').dt.total_minutes().alias('delta_time'))
+            .otherwise(pl.lit(None))
+        ])
+    )
+
+    return encoded_input_data
 
 
 def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next_state_window, train_ids, val_ids,
@@ -1503,9 +1500,9 @@ def get_nutrition_names():
     return ['carbs_enteral', 'carbs_parenteral', 'protein_enteral', 'protein_parenteral']
 
 
-def get_patient_ids(combined_data):
+def get_patient_ids(combined_data, train_test_split: float = 0.8, force: bool = False):
     # Check if train/val/test ids already exist:
-    if os.path.exists(f'./data/mimic/patient_ids/test_patient_ids.npy'):
+    if os.path.exists(f'./data/mimic/patient_ids/test_patient_ids.npy') or force:
         segments = ['train', 'val', 'test']
         return tuple([np.load(f'./data/mimic/patient_ids/{segment}_patient_ids.npy')
                       for segment in segments])
@@ -1516,8 +1513,8 @@ def get_patient_ids(combined_data):
     np.random.seed(42)
     np.random.shuffle(patient_ids)
 
-    train_idx = round(0.8 * len(patient_ids))  # Set train proportion to 80%
-    val_idx = round(0.9 * len(patient_ids))  # Set val (and test) proportion to 10%
+    train_idx = round(train_test_split * len(patient_ids))  # Set train proportion to 80% (default)
+    val_idx = round((train_test_split + 1) / 2 * len(patient_ids))  # Split val / test equally (10% each default)
 
     train_patient_ids, val_patient_ids, test_patient_ids = np.split(
         patient_ids, [train_idx, val_idx]
@@ -1556,35 +1553,20 @@ def get_scaling_data_for_mimic(encoded_input_data, labels, train_patient_ids, in
 
     scaling_data = (
         encoded_input_data
-        # We want to calculate delta_value relative to any previous value >= 15 minutes ago for the same subject/feature
-        # (we filter out based on maximum input_window_size later)
-        # To achieve this, we can do "join_asof" to get the "nearest" approximate time.
-        .join_asof(
-            encoded_input_data
-            .select('subject_id', 'str_feature', pl.col('featuretime') + pl.duration(minutes=15), 'value'),
-            on='featuretime', by=['subject_id', 'str_feature'], strategy='backward',
-            coalesce=False,  # <- preserves featuretime_right even though we are joining on it
-            check_sortedness=False, # <- polars can't do this when by=[] is given, but we have already sorted above
-        )
         .with_columns([
-            (pl.col('value') - pl.col('value_right')).alias('delta_value'),
-            # Remember, featuretime_right is currently artificially shifted 15 minutes forward.
-            (pl.col('featuretime') - (pl.col('featuretime_right') - pl.duration(minutes=15))).alias('delta_time')
-        ])
-        .drop('^*_right$')
-        .with_columns([
-            pl.when(pl.col('delta_time') > pl.duration(hours=input_window_size))
-            .then(pl.lit(None).alias('delta_value'))
-            .otherwise(pl.col('delta_value'))
+            pl.when(pl.col('delta_time') <= input_window_size * 60)
+            .then('delta_value')
+            .otherwise(pl.lit(None))
         ])
         # Delta time and delta value done separately to avoid any interactions
         .with_columns([
-            pl.when(pl.col('delta_time') > pl.duration(hours=input_window_size))
-            .then(pl.lit(None).alias('delta_time'))
-            .otherwise(pl.col('delta_time').dt.total_minutes())
+            pl.when(pl.col('delta_time') <= input_window_size * 60)
+            .then('delta_time')
+            .otherwise(pl.lit(None))
         ])
         .group_by('str_feature', 'encoded_feature')
     )
+
     # Assemble our required columns
     aggregate_columns = []
     for col in ['value', 'delta_value', 'delta_time']:
@@ -1658,7 +1640,7 @@ def load_files(directory, filename):
     return pl.scan_parquet(filepath)
 
 
-def load_mimic(variable_names: dict = None):
+def load_mimic(variable_names: dict = None, train_test_split: float = 0.8):
     admissions = load_files('mimic/parquet', 'admissions')
     chartevents = load_files('mimic/parquet', 'chartevents')
     d_items = load_files('mimic/parquet', 'd_items')
@@ -1770,7 +1752,8 @@ def load_mimic(variable_names: dict = None):
     )
 
     # Define our patient_ids
-    train_patient_ids, val_patient_ids, test_patient_ids = get_patient_ids(combined_data)
+    train_patient_ids, val_patient_ids, test_patient_ids = get_patient_ids(combined_data,
+                                                                           train_test_split=train_test_split)
 
     return admissions, combined_data, patients, (train_patient_ids, val_patient_ids, test_patient_ids)
 
