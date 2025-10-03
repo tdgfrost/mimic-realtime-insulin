@@ -90,7 +90,6 @@ def build_mimic_data(input_window_size=168, next_state_delay=15, next_state_wind
         )
 
     # Save all our data thus far
-    combined_data.write_parquet('./data/mimic/combined_data.parquet')
     encoded_input_data.write_parquet('./data/mimic/encoded_input_data.parquet')
     feature_encoding.write_parquet('./data/feature_encoding.parquet')
     labels.write_parquet('./data/mimic/labels.parquet')

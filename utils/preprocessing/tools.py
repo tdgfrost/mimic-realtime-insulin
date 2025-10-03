@@ -1254,25 +1254,10 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
     )
 
     # Prepare our column selection expressions
-    valid_insulin_doses = [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0]
     insulin_delta_rate = pl.col('insulin_new_rate') - pl.col('insulin_default_rate')
-    rounded_insulin_delta = (
-        pl.when(insulin_delta_rate.abs() < np.max(valid_insulin_doses) + 0.5)
-        .then(
-            # Find the closest value from the list
-            pl.lit(valid_insulin_doses).list.get(
-                (valid_insulin_doses - insulin_delta_rate.abs()).list.eval(pl.element().abs()).list.arg_min()
-            ) * insulin_delta_rate.sign())
-        .otherwise(
-            # If delta change is outside the list, leave unchanged
-            insulin_delta_rate
-        )
-    )
-
-    valid_insulin_doses.remove(0.0)
-    insulin_maintained = rounded_insulin_delta.abs() == 0
-    insulin_stopped = (rounded_insulin_delta <= -0.5) & (pl.col('insulin_new_rate') < 0.25)
-    in_range_insulin_delta_change = rounded_insulin_delta.abs().is_in(valid_insulin_doses)
+    insulin_maintained = insulin_delta_rate.is_between(-0.25, 0.25, closed='none')
+    insulin_stopped = (insulin_delta_rate <= -0.25) & (pl.col('insulin_new_rate') < 0.25)
+    in_range_insulin_delta_change = insulin_delta_rate.abs() < 5.5
     out_of_bounds_insulin_delta_change = (
             insulin_maintained.not_() & insulin_stopped.not_() & in_range_insulin_delta_change.not_()
     )
@@ -1315,10 +1300,10 @@ def get_insulin_labels_for_mimic(labels, inclusion_hours, next_state_start, next
             .then(pl.lit(1))
             .otherwise(pl.lit(0)).alias('insulin_stop'),
 
-            # Add insulin delta change (rounded to nearest item in our valid_insulin_doses list)
-            rounded_insulin_delta.alias('insulin_delta_change')
+            # Add insulin delta change
+            insulin_delta_rate.alias('insulin_delta_change')
         ])
-        # Remove completely the out-of-bounds labels
+        # Remove completely the out-of-bounds labels (i.e., changes ≥5.5 units or ≤-5.5 units)
         .filter(out_of_bounds_insulin_delta_change.not_())
     )
 
@@ -1604,22 +1589,33 @@ def get_scaling_data_for_mimic(encoded_input_data, labels, train_patient_ids, in
 
 
 def get_nutrition_values_for_mimic():
-    with open('./nutrition_conversion_values.yaml', 'r') as f:
+    with open('./yaml_files/nutrition_conversion_values.yaml', 'r') as f:
         nutrition_conversion_values = yaml.safe_load(f)
+        f.close()
     return nutrition_conversion_values
 
 
 def get_nutrition_variables_for_mimic():
-    with open('./nutrition_variables.yaml', 'r') as f:
+    with open('./yaml_files/nutrition_variables.yaml', 'r') as f:
         nutrition_variables = yaml.safe_load(f)
+        f.close()
     nutrition_variables = {key: key for key in nutrition_variables}
     return nutrition_variables
 
 
 def get_variable_names_for_mimic():
-    with open('./drug_lab_variable_names.yaml', 'r') as f:
+    with open('./yaml_files/drug_lab_variable_names.yaml', 'r') as f:
         variable_names = yaml.safe_load(f)
+        f.close()
     return variable_names
+
+
+def get_demographic_information_for_mimic():
+    with open('./yaml_files/demographic_indexes.yaml', 'r') as f:
+        demographic_indexes = yaml.safe_load(f)
+    return (demographic_indexes['comorbidity_index'],
+            demographic_indexes['admission_index'],
+            demographic_indexes['ethnicity_index'])
 
 
 def join_dfs(first_df, second_df):
