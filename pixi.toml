@@ -1,0 +1,40 @@
+[workspace]
+authors = ["tdgfrost <100413067+tdgfrost@users.noreply.github.com>"]
+channels = ["conda-forge"]
+name = "insulin4rl"
+platforms = ["osx-arm64", "linux-64", "win-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = ">=3.11"
+pip = "*"
+setuptools = "<82"
+wheel = "*"
+
+[target.linux-64.dependencies]
+cuda-nvcc = "12.8.*"
+cuda-cudart-dev = "12.8.*"
+cuda-version = "12.8.*"
+gxx_linux-64 = "12.*"
+
+[target.linux-64.pypi-dependencies]
+torch = { version = ">=2.11.0", index = "https://download.pytorch.org/whl/cu128" }
+
+[target.osx-arm64.pypi-dependencies]
+torch = ">=2.11.0"
+
+[target.win-64.pypi-dependencies]
+torch = ">=2.11.0"
+
+[pypi-dependencies]
+polars = ">=1.39.3, <2"
+pyyaml = ">=6.0.2, <7"
+physionet = ">=0.1.5, <0.2"
+jupyter = ">=1.1.1, <2"
+numpy = ">=2.4.4, <3"
+tqdm = ">=4.67.3, <5"
+torcheval = ">=0.0.7, <0.0.8"
+matplotlib = ">=3.10.8, <4"
+safetensors = ">=0.7.0, <0.8"

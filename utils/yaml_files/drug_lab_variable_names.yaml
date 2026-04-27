@@ -1,0 +1,102 @@
+{
+        # Infusions
+        # - Antiarrhythmics
+        'Amiodarone': 'Amiodarone', 'Amiodarone 600/500': 'Amiodarone',
+        'Amiodarone 450/250': 'Amiodarone', 'Amiodarone 150/100': 'Amiodarone',
+
+        # - Antibiotics
+        'Acyclovir': 'Aciclovir', 'Ambisome': 'Ambisome', 'Amikacin': 'Amikacin',
+        'Ampicillin': 'Ampicillin', 'Ampicillin/Sulbactam (Unasyn)': 'Ampicillin-Sulbactam',
+        'Azithromycin': 'Azithromycin', 'Aztreonam': 'Aztreonam', 'Bactrim (SMX/TMP)': 'Co-trimoxazole',
+        'Caspofungin': 'Caspofungin', 'Cefazolin': 'Cefazolin', 'Cefepime': 'Cefepime',
+        'Ceftazidime': 'Ceftazidime',
+        'Ceftriaxone': 'Ceftriaxone', 'Ciprofloxacin': 'Ciprofloxacin', 'Chloramphenicol': 'Chloramphenicol',
+        'Clindamycin': 'Clindamycin', 'Colistin': 'Colistin',
+        'Daptomycin': 'Daptomycin', 'Doxycycline': 'Doxycycline',
+        'Ertapenem': 'Ertapenem', 'Erythromycin': 'Erythromycin',
+        'Gentamicin': 'Gentamicin', 'Levofloxacin': 'Levofloxacin',
+        'Meropenem': 'Meropenem', 'Linezolid': 'Linezolid', 'Micafungin': 'Micafungin',
+        'Metronidazole': 'Metronidazole', 'Nafcillin': 'Nafcillin', 'Oxacillin': 'Oxacillin',
+        'Piperacillin': 'Piperacillin',
+        'Piperacillin/Tazobactam (Zosyn)': 'Piperacillin-Tazobactam',
+        'Rifampin': 'Rifampin', 'Tigecycline': 'Tigecycline',
+        'Tobramycin': 'Tobramycin',
+        'Vancomycin': 'Vancomycin', 'Voriconazole': 'Voriconazole',
+
+        # - Anticoagulants
+        'Heparin Sodium': 'Unfractionated Heparin',
+
+        # - Anticonvulsants
+        'Levetiracetam (Keppra)': 'Levetiracetam', 'Fosphenytoin': 'Phenytoin',
+
+        # - Antihypertensives
+        'Nitroglycerin': 'Nitroglycerin', 'Nitroprusside': 'Nitroprusside',
+
+        # - Beta blockers / CCBs
+        'Labetalol': 'Labetalol',
+
+        # - Blood products
+        'Fresh Frozen Plasma': 'FFP', 'Albumin 25%': 'Human Albumin Solution 25%',
+        'IV Immune Globulin (IVIG)': 'IVIG', 'Platelets': 'Platelet infusion', 'Packed Red Blood Cells': 'PRBC',
+
+        # - Dialysis
+        'Blood Flow (ml/min)': 'Dialysis Blood Flow Rate', 'Dialysate Rate': 'Dialysate Rate',
+        'Hourly Patient Fluid Removal': 'Dialysis Fluid Removal Rate',
+
+        # - Diuretics
+        'Furosemide (Lasix)': 'Furosemide', 'Furosemide (Lasix) 250/50': 'Furosemide',
+        'Bumetanide (Bumex)': 'Bumetanide',
+
+        # - Glucose control
+        'Insulin - Regular': 'Regular Insulin',
+
+        # - Hypertonic saline / mannitol
+        'NaCl 3% (Hypertonic Saline)': 'Hypertonic Saline', 'Mannitol': 'Mannitol',
+
+        # - Miscellaneous
+        'Aminophylline': 'Aminophylline', 'Sodium Bicarbonate 8.4%': 'Sodium Bicarbonate 8.4%',
+        'Sodium Bicarbonate 8.4% (Amp)': 'Sodium Bicarbonate 8.4%',
+        'Dextrose 5%': 'Dextrose 5%', 'Dextrose 10%': 'Dextrose 10%', 'Dextrose 50%': 'Dextrose 50%',
+        'Dextrose 20%': 'Dextrose 20%',
+
+        # - Opioids
+        'Fentanyl': 'Fentanyl', 'Fentanyl (Concentrate)': 'Fentanyl', 'Fentanyl (Push)': 'Fentanyl',
+        'Morphine Sulfate': 'Morphine',
+
+        # - Paralytics
+        'Cisatracurium': 'Cisatracurium', 'Rocuronium': 'Rocuronium', 'Vecuronium': 'Vecuronium',
+
+        # - Sedatives incl benzos
+        'Dexmedetomidine (Precedex)': 'Dexmedetomidine', 'Ketamine': 'Ketamine',
+        'Ketamine (Intubation)': 'Ketamine',
+        'Lorazepam (Ativan)': 'Lorazepam', 'Midazolam (Versed)': 'Midazolam',
+        'Propofol': 'Propofol', 'Propofol (Intubation)': 'Propofol',
+
+        # - Steroids
+        'emar': {'Dexamethasone': 'Dexamethasone', 'Prednisolone': 'Prednisolone',
+                 'MethylPREDNISolone Sodium Succ': 'Methylprednisolone', 'Methylprednisolone': 'Methylprednisolone',
+                 'PrednisoLONE Oral Solution': 'Prednisolone', 'Prednisone': 'Prednisolone',
+                 'prednisone': 'Prednisolone', 'prednisoLONE': 'Prednisolone', 'PredniSONE': 'Prednisolone'},
+
+        # - Thrombolytics
+        'Alteplase (TPA)': 'Alteplase',
+
+        # - Vasopressors / inotropes
+        'Epinephrine': 'Adrenaline', 'Dobutamine': 'Dobutamine', 'Dopamine': 'Dopamine',
+        'Milrinone': 'Milrinone', 'Norepinephrine': 'Noradrenaline', 'Vasopressin': 'Vasopressin',
+
+        # Labs
+        'ALT': 'ALT', 'AST': 'AST', 'Albumin': 'Albumin', 'Alkaline Phosphate': 'ALP', 'Amylase': 'Amylase',
+        'Anion gap': 'Anion Gap', 'Arterial Base Excess': 'Base Excess', 'Arterial CO2 Pressure': 'Blood Gas pCO2',
+        'Arterial O2 Saturation': 'Blood Gas SpO2', 'Arterial O2 pressure': 'Blood Gas pO2',
+        'BUN': 'Urea', 'Ionized Calcium': 'Ionised Calcium',
+        'Calcium non-ionized': 'Calcium', 'C Reactive Protein (CRP)': 'CRP', 'Chloride (serum)': 'Chloride',
+        'Chloride (whole blood)': 'Chloride', 'Creatinine (serum)': 'Creatinine', 'Glucose (serum)': 'Glucose',
+        'Glucose (whole blood)': 'Bedside Glucose', 'Glucose finger stick (range 70-100)': 'Bedside Glucose',
+        'HCO3 (serum)': 'HCO3', 'Hematocrit (serum)': 'Haematocrit', 'Hemoglobin': 'Haemoglobin',  # 'INR': 'INR',
+        'Lactic Acid': 'Lactate', 'LDH': 'LDH', 'Lipase': 'Lipase', 'PH (Arterial)': 'pH', 'PH (Venous)': 'pH',
+        'Platelet Count': 'Platelets', 'Potassium (serum)': 'Potassium', 'Potassium (whole blood)': 'Potassium',
+        'Prothrombin time': 'Prothrombin Time', 'Sodium (serum)': 'Sodium', 'Sodium (whole blood)': 'Sodium',
+        'Total Bilirubin': 'Bilirubin', 'Troponin-T': 'Troponin - T', 'Venous CO2 Pressure': 'Blood Gas pCO2',
+        'Venous O2 Pressure': 'Blood Gas pO2', 'WBC': 'WBC',
+    }

@@ -1,0 +1,28 @@
+[
+        # Enteral Feeds/Nutrition
+        'Nepro (Full)', 'Replete with Fiber (Full)', 'Vital High Protein (Full)', 'Promote (Full)',
+        'Osmolite 1.5 (Full)', 'Jevity 1.5 (Full)', 'Promote with Fiber (Full)', 'Glucerna 1.2 (Full)',
+        'Glucerna 1.5 (Full)', 'Jevity 1.2 (Full)', 'Fibersource HN (Full)', 'Isosource 1.5 (Full)',
+        'Nutren Pulmonary (Full)', 'Two Cal HN (Full)', 'Vital 1.5 (Full)', 'NovaSource Renal (Full)',
+        'Nutren 2.0 (Full)', 'Replete (Full)', 'Boost Glucose Control (Full)', 'Peptamen Bariatric (Full)',
+        'Pulmocare (Full)', 'Vivonex (Full)', 'Peptamen 1.5 (Full)', 'Nutren Renal (Full)', 'Glucerna (Full)',
+        'Impact with Fiber (Full)', 'Ensure (Full)', 'Replete with Fiber (1/2)', 'Impact (Full)',
+        'Replete with Fiber (3/4)', 'Replete (3/4)', 'Enlive (Full)', 'Replete (1/2)', 'NovaSource Renal (1/2)',
+        'Nutren Renal (1/2)', 'Nutren 2.0 (3/4)', 'Isosource 1.5 (1/2)', 'Nutren Renal (3/4)', 'Peptamen 1.5 (3/4)',
+        'Replete with Fiber (1/4)', 'NovaSource Renal (3/4)', 'Fibersource HN (3/4)', 'Nutren 2.0 (1/2)',
+        'Impact (3/4)', 'Nutren Pulmonary (1/2)', 'Fibersource HN (1/2)', 'Replete (2/3)', 'Peptamen 1.5 (1/2)',
+        'Impact (1/2)', 'Nutren 2.0 (1/4)', 'Impact with Fiber (3/4)', 'Replete with Fiber (2/3)',
+        'Fibersource HN (1/4)', 'Vivonex (1/2)', 'Isosource 1.5 (3/4)', 'Glucerna (1/2)', 'Peptamen 1.5 (1/4)',
+        'Boost Glucose Control (1/2)', 'Nutren 2.0 (2/3)', 'Replete (1/4)', 'Two Cal HN (1/2)',
+        'Nutren Pulmonary (3/4)', 'Nepro (1/2)', 'Boost Glucose Control (3/4)', 'Impact (1/4)', 'Vivonex (3/4)',
+        'Impact with Fiber (1/2)', 'Isosource 1.5 (1/4)', 'Impact with Fiber (1/4)', 'Nutren Renal (1/4)',
+        'Isosource 1.5 (2/3)', 'Pulmocare (1/2)', 'Pulmocare (1/4)', 'Boost Glucose Control (1/4)', 'Ensure (3/4)',
+        'Beneprotein',
+
+        # Parenteral Feeds/Nutrition
+        # - You'll have an order for TPN (e.g., 'TPN w/ Lipids'), specifying rate/volume
+        # - under the same orderid/linkorderid you'll have the additives
+        # e.g., Lipids, Amino Acids, Dextrose
+        # 'TPN w/ Lipids', 'TPN without Lipids', 'Peripheral Parenteral Nutrition',
+        'Lipids 10%', 'Lipids 20%', 'Amino Acids', 'Lipids (additive)', 'Dextrose PN',
+    ]
