@@ -133,12 +133,26 @@ class CloningDataset(_BaseDataset):
 
     def _precompute(self):
         self.states = self._concat_states()
+        self.insulin_delta_change = self._concat_actions(override_keys=['insulin_delta_change'])
         self.actions = self._concat_actions(override_keys=['insulin_maintain', 'insulin_stop', 'insulin_change'])
+        self.current_bm = self._concat_infos(override_keys=['current_bm'])
+        self.episode_num = self._concat_infos(override_keys=['episode_num'])
+        self.three_day_alive = self._concat_reward_markers(override_keys=['3-day-alive'])
+        self.insulin_old_rate = self._concat_infos(override_keys=['insulin_old_rate'])
+        self.minutes_remaining = self._concat_infos(override_keys=['minutes_remaining'])
+        self.time_until_next_bm = self._concat_infos(override_keys=['time_until_next_bm'])
 
     def __getitem__(self, idx) -> Dict[str, torch.Tensor]:
         return {
             'states': self.states[idx],
             'actions': self.actions[idx],
+            'infos': {'current_bm': self.current_bm[idx],
+                     'episode_num': self.episode_num[idx],
+                     'insulin_delta_change': self.insulin_delta_change[idx],
+                     '3-day-alive': self.three_day_alive[idx],
+                     'insulin_old_rate': self.insulin_old_rate[idx],
+                     'minutes_remaining': self.minutes_remaining[idx],
+                     'time_until_next_bm': self.time_until_next_bm[idx]},
         }
 
 
@@ -153,7 +167,7 @@ class FQEDataset(_BaseDataset):
         # The overrides above are permanent and will carry across to the next states/actions
         self.next_states = self._concat_states(is_next=True)
         self.next_actions = self._concat_actions(is_next=True)
-        self.infos = self._concat_infos(override_keys=['time_until_next_bm'])
+        self.time_until_next_bm = self._concat_infos(override_keys=['time_until_next_bm'])
         self.dones = self.raw_data['dones']['is_done']
 
     def __getitem__(self, idx) -> Dict[str, torch.Tensor]:
@@ -164,5 +178,5 @@ class FQEDataset(_BaseDataset):
             'next_states': self.next_states[idx],
             'next_actions': self.next_actions[idx],
             'dones': self.dones[idx],
-            'infos': {'time_until_next_bm': self.infos[idx]},
+            'infos': {'time_until_next_bm': self.time_until_next_bm[idx]},
         }
