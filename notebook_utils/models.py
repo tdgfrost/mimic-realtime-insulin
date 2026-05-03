@@ -1,3 +1,4 @@
+from typing import Union, Tuple
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -61,7 +62,7 @@ class CNNLSTMModel(nn.Module):
             n_cnn_layers: int = 2,
             n_lstm_layers: int = 1,
             dropout: float = 0.2,
-            out_dim: int = 1
+            out_dim: Union[int, Tuple[int]] = 1
     ):
         super().__init__()
         self.n_cnn_layers = n_cnn_layers
@@ -94,14 +95,20 @@ class CNNLSTMModel(nn.Module):
         )
 
         # Dense Decoding Layers
-        self.dense = nn.Sequential(
-            nn.Dropout(dropout),
-            spectral_norm(nn.Linear(hidden_dim, hidden_dim)),
-            nn.LayerNorm(hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_dim, out_dim)
-        )
+        if not isinstance(out_dim, tuple):
+            out_dim = (out_dim,)
+
+        self.dense_decoder = nn.Sequential(
+                nn.Dropout(dropout),
+                spectral_norm(nn.Linear(hidden_dim, hidden_dim)),
+                nn.LayerNorm(hidden_dim),
+                nn.ReLU(),
+                nn.Dropout(dropout),
+            )
+
+        self.dense_heads = nn.ModuleList([])
+        for dim in out_dim:
+            self.dense_heads.append(nn.Linear(hidden_dim, dim))
 
     def soft_update(self, target_model: nn.Module, polyak_tau: float = 0.005):
         """
@@ -161,4 +168,18 @@ class CNNLSTMModel(nn.Module):
         hidden_state = torch.take_along_dim(lstm_out, lengths, dim=1).squeeze(1)
 
         # Decode
-        return self.dense(hidden_state)
+        hidden_state = self.dense_decoder(hidden_state)
+        out = [dense_head(hidden_state) for dense_head in self.dense_heads]
+        return out[0] if len(out) == 1 else out
+
+
+class DummyScaler:
+    @staticmethod
+    def scale(x):
+        return x
+    @staticmethod
+    def step(optimizer):
+        optimizer.step()
+    @staticmethod
+    def update():
+        pass
