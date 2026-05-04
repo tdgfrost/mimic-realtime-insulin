@@ -101,17 +101,16 @@ class _BaseDataset:
         raise NotImplementedError("Subclasses must implement __getitem__")
 
 
-
-class ExampleDataset(_BaseDataset):
+class ExampleTrainingDataset(_BaseDataset):
     def __init__(self, segment_dir: str, device: str = 'cuda'):
         super().__init__(segment_dir, device)
 
     def _precompute(self):
         self.states = self._concat_states()
-        self.actions = self._concat_actions()
-        self.reward_markers = self._concat_reward_markers()
         self.next_states = self._concat_states(is_next=True)
+        self.actions = self._concat_actions()
         self.next_actions = self._concat_actions(is_next=True)
+        self.reward_markers = self._concat_reward_markers()
         self.infos = self._concat_infos()
         self.dones = self.raw_data['dones']['is_done']
 
@@ -123,74 +122,5 @@ class ExampleDataset(_BaseDataset):
             'next_states': self.next_states[idx],
             'next_actions': self.next_actions[idx],
             'dones': self.dones[idx],
-            'infos': self.infos[idx],
-        }
-
-
-class CloningDataset(_BaseDataset):
-    def __init__(self, segment_dir: str, device: str = 'cuda'):
-        super().__init__(segment_dir, device)
-
-    def _precompute(self):
-        # Information used for UMAP later on
-        self.insulin_delta_change = self._concat_actions(override_keys=['insulin_delta_change'])
-        self.current_bm = self._concat_infos(override_keys=['current_bm'])
-        self.episode_num = self._concat_infos(override_keys=['episode_num'])
-        self.three_day_alive = self._concat_reward_markers(override_keys=['3-day-alive'])
-        self.insulin_old_rate = self._concat_infos(override_keys=['insulin_old_rate'])
-        self.minutes_remaining = self._concat_infos(override_keys=['minutes_remaining'])
-        self.time_until_next_bm = self._concat_infos(override_keys=['time_until_next_bm'])
-
-        # States/actions for training
-        self.states = self._concat_states()
-        self.actions = self._concat_actions(override_keys=['insulin_maintain', 'insulin_stop', 'insulin_change'])
-
-        delta_change = self._concat_actions(override_keys=['insulin_delta_change']).squeeze(-1)
-
-        self.valid_doses = torch.tensor(
-            [-5, -4, -3, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 3, 4, 5],
-            device=self.device
-        )
-
-        diffs = torch.abs(delta_change.unsqueeze(1) - self.valid_doses.unsqueeze(0))
-        dose_actions = torch.argmin(diffs, dim=1)
-        self.actions = torch.cat((self.actions, dose_actions.view(-1, 1)), dim=-1).long()
-
-    def __getitem__(self, idx) -> Dict[str, torch.Tensor]:
-        return {
-            'states': self.states[idx],
-            'actions': self.actions[idx],
-            'infos': {'current_bm': self.current_bm[idx],
-                      'episode_num': self.episode_num[idx],
-                      'insulin_delta_change': self.insulin_delta_change[idx],
-                      '3-day-alive': self.three_day_alive[idx],
-                      'insulin_old_rate': self.insulin_old_rate[idx],
-                      'minutes_remaining': self.minutes_remaining[idx],
-                      'time_until_next_bm': self.time_until_next_bm[idx]},
-        }
-
-
-class FQEDataset(_BaseDataset):
-    def __init__(self, segment_dir: str, device: str = 'cuda'):
-        super().__init__(segment_dir, device)
-
-    def _precompute(self):
-        self.states = self._concat_states()
-        self.actions = self._concat_actions(override_keys=['insulin_maintain', 'insulin_stop', 'insulin_change'])
-        self.reward_markers = self._concat_reward_markers(override_keys=['next_bm'])
-        # The overrides above are permanent and will carry across to the next states/actions
-        self.next_states = self._concat_states(is_next=True)
-        self.next_actions = self._concat_actions(is_next=True)
-        self.time_until_next_bm = self._concat_infos(override_keys=['time_until_next_bm'])
-        self.dones = self.raw_data['dones']['is_done']
-
-    def __getitem__(self, idx) -> Dict[str, torch.Tensor]:
-        return {
-            'states': self.states[idx],
-            'actions': self.actions[idx],
-            'reward_markers': self.reward_markers[idx],
-            'next_states': self.next_states[idx],
-            'next_actions': self.next_actions[idx],
-            'dones': self.dones[idx],
-            'infos': {'time_until_next_bm': self.time_until_next_bm[idx]},
+            'infos': {key: self.infos[idx, i] for i, key in enumerate(self.info_keys)},
         }

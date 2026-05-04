@@ -171,15 +171,3 @@ class CNNLSTMModel(nn.Module):
         hidden_state = self.dense_decoder(hidden_state)
         out = [dense_head(hidden_state) for dense_head in self.dense_heads]
         return out[0] if len(out) == 1 else out
-
-
-class DummyScaler:
-    @staticmethod
-    def scale(x):
-        return x
-    @staticmethod
-    def step(optimizer):
-        optimizer.step()
-    @staticmethod
-    def update():
-        pass

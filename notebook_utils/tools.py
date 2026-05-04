@@ -62,7 +62,7 @@ def update_plots(current_idx, iters, losses, aurocs=None, v_s0=None):
 
     if isinstance(losses, dict):
         for loss_name, loss_values in losses.items():
-            linestyle = '--' if 'val' in loss_name.lower() else '-'
+            linestyle = '-' if 'train' in loss_name.lower() else '--'
             ax_loss.plot(iters, loss_values, label=loss_name, linewidth=1.5, linestyle=linestyle)
         ax_loss.set_ylabel("Loss Magnitude")
     else:
@@ -85,7 +85,7 @@ def update_plots(current_idx, iters, losses, aurocs=None, v_s0=None):
         labels = []
 
         for metric_name, scores in aurocs.items():
-            linestyle = '--' if 'val' in metric_name.lower() else '-'
+            linestyle = '-' if 'train' in metric_name.lower() else '--'
 
             # Route MAE to the secondary axis
             if 'MAE' in metric_name:
@@ -101,6 +101,8 @@ def update_plots(current_idx, iters, losses, aurocs=None, v_s0=None):
         ax_auroc.set_title("Validation Metrics")
         ax_auroc.set_xlabel("Epoch")
         ax_auroc.set_ylabel("AUROC Score")
+        ax_auroc.set_ylim(0.5, 1.0)
+        ax_mae.set_ylim(0.0, 1.5)
         ax_auroc.grid(True, alpha=0.3)
 
         # Combine legends from both axes
@@ -118,7 +120,7 @@ def update_plots(current_idx, iters, losses, aurocs=None, v_s0=None):
         ax_v = axes[plot_idx]
         if isinstance(v_s0, dict):
             for v_name, v_values in v_s0.items():
-                linestyle = '--' if 'val' in v_name.lower() else '-'
+                linestyle = '-' if 'train' in v_name.lower() else '--'
                 ax_v.plot(iters, v_values, label=v_name, linewidth=1.5, linestyle=linestyle)
         else:
             ax_v.plot(iters, v_s0, label='$V(S_0)$', color='tab:green', linewidth=1.5)
