@@ -8,7 +8,8 @@ Changes:
 - Notebook updated to have distribution of time between states and distribution of delta_change doses
 - Notebook updated to plot UMAP embedding after behavioural-cloning
 - Notebook updated to just a single ExampleTrainingDataset
-- Notebook updated to have implicit Q-learning (both SMDP and MDP)
+- Notebook updated to have implicit Q-learning (both SMDP and MDP) and conservative Q-learning
+- Notebook updated to include multi-seed running + faster code
 
 =================
 Insulin4RL v1.0.0

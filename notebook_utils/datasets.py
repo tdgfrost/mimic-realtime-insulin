@@ -123,4 +123,5 @@ class ExampleTrainingDataset(_BaseDataset):
             'next_actions': self.next_actions[idx],
             'dones': self.dones[idx],
             'infos': {key: self.infos[idx, i] for i, key in enumerate(self.info_keys)},
+            'idx': idx,
         }
